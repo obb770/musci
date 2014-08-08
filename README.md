@@ -55,51 +55,76 @@ object is then used as a function (callable) to issue commands to the
 device, the return value of the function call is that output data from the
 command.
 
-    ```python
     import musci
     with musci.Brain() as brain:
         brain('setLEDState', 255, 0, 0)
         r, g, b = brain('getLEDState')
         ...
-    ```
 
 For now, _only_ the following commands were tested:
 
 - `getAllFaceStates`:
-  - Input: empty
-  - Output: STATE-1, VALUE-1, STATE-2, VALUE-2, ..., STATE-8, VALUE-8
+
+  Input: empty
+
+  Output: STATE-1, VALUE-1, STATE-2, VALUE-2, ..., STATE-8, VALUE-8
+
 
 - `setAllFaceStates`:
-  - Input: STATE-1, STATE-2, ..., STATE-8
-  - Output: VALUE-1, VALUE-2, ..., VALUE-8
+
+  Input: STATE-1, STATE-2, ..., STATE-8
+
+  Output: VALUE-1, VALUE-2, ..., VALUE-8
+
 
 - `setFaceState`:
-  - Input: ZERO-BASED-INDEX, STATE
-  - Output: ZERO-BASED-INDEX, VALUE
+  
+  Input: ZERO-BASED-INDEX, STATE
+  
+  Output: ZERO-BASED-INDEX, VALUE
+
 
 - `getAllFaceValues`:
-  - Input: empty
-  - Output: VALUE-1, VALUE-2, ..., VALUE-8
+
+  Input: empty
+
+  Output: VALUE-1, VALUE-2, ..., VALUE-8
+
 
 - `getFaceValue`:
-  - Input: ZERO-BASED-INDEX
-  - Output: ZERO-BASED-INDEX, VALUE
+
+  Input: ZERO-BASED-INDEX
+
+  Output: ZERO-BASED-INDEX, VALUE
+
 
 - `setManyFaceValues`:
-  - Input: INDEX-MASK, FIRST-VALUE, SECOND-VALUE, ..., LAST-VALUE
-  - Output: empty
+
+  Input: INDEX-MASK, FIRST-VALUE, SECOND-VALUE, ..., LAST-VALUE
+
+  Output: empty
+
 
 - `setFaceValue`:
-  - Input: ZERO-BASED-INDEX, VALUE
-  - Output: empty
+
+  Input: ZERO-BASED-INDEX, VALUE
+
+  Output: empty
+
 
 - `getLEDState`:
-  - Input: empty
-  - Output: RED-VALUE, GREEN-VALUE, BLUE-VALUE
+
+  Input: empty
+
+  Output: RED-VALUE, GREEN-VALUE, BLUE-VALUE
+
 
 - `setLEDState`:
-  - Input: RED-VALUE, GREEN-VALUE, BLUE-VALUE
-  - Output: empty
+
+  Input: RED-VALUE, GREEN-VALUE, BLUE-VALUE
+
+  Output: empty
+
 
 Scanning and connecting can take some time (>10 seconds), it can be
 shortened if the device address is provided when the `Brain` object is
