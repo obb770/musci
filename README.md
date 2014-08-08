@@ -30,7 +30,8 @@ Setup
 Setting up bluetooth can be tricky, at a minimum, the brain device needs to be
 paired with a bluetooth enabled computer. The operating system needs to
 support Python and the Python BlueZ bindings. The code was developed and
-tested on an Asus 1000he EeePC running Ubuntu 14.04.
+tested on an Asus 1000he EeePC running Ubuntu 14.04. It was also tested on a
+Raspberry Pi with a bluetooth dongle running Raspbian.
 
 It is probably best to start by following the information in the links in the
 Introduction section above and setup the mobile apps and/or the Scratch
