@@ -29,8 +29,26 @@ import argparse
 import logging
 import sys
 
-import bluetooth
+SERVICE = 'AMP-SPP'
 
+try:
+    import bluetooth
+    def _find_service():
+        for service in bluetooth.find_service(name=SERVICE):
+            addr = service['host']
+            yield addr, service['port'], bluetooth.lookup_name(addr)
+    def _socket():
+        return bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+except:
+    try:
+        import lightblue
+        def _find_service():
+            for addr, port, service in lightblue.findservices(name=SERVICE):
+                yield addr, port, lightblue.finddevicename(addr)
+        def _socket():
+            return lightblue.socket(lightblue.RFCOMM)
+    except:
+        raise Exception('could not import lightblue or bluetooth')
 
 __all__ = [
     'Brain',
@@ -90,9 +108,10 @@ class Brain(object):
     device.
 
     The object is initialized (optionally) with the bluetooth device
-    address. The process is fastest if the address is specified. If no
-    address is specified, then scan for a bluetooth device with a name
-    beginning with specific prefix.
+    address, or a name. The process is fastest if the address is
+    specified. If no address is specified, then scan is made for a
+    bluetooth device with the name, or if no name was specified, then
+    for a device with a name beginning with a specific prefix.
 
     This object is intended to be used with a "with" statement. When
     entering the "with" block, the bluetooth connection is created
@@ -105,18 +124,23 @@ class Brain(object):
     call.
     """
 
-    def __init__(self, argv=None, address='', debug=False):
+    def __init__(self, argv=None, address='', name=None, debug=False):
         """Configure the Brain object.
 
-        Configure the address and whether to enable debug logging,
+        Configure the address/name and whether to enable debug logging,
         Coniguration is done either through dedicated keyword arguments,
         or through options in argv.
+        Only an address or a name can be specified but not both.
+        The address can optionally be followed by a comma (',') and a
+        port number, if no port is specified then '1' will be used.
 
-        argv - use "-a ADDRESS" and "-d"
+        argv - use "-a ADDRESS", "-n NAME" and "-d"
         address - brain device bluetooth address
+        name - brain device user-friendly name
         debug - enable debug logging
         """
         self.address = address
+        self.name = name
         self._debug = debug
         if argv:
             parser = argparse.ArgumentParser()
@@ -124,6 +148,8 @@ class Brain(object):
                 action='store_true', help='enable debug messages')
             parser.add_argument('-a', '--address',
                 help='specify the bluetooth address')
+            parser.add_argument('-n', '--name',
+                help='specify the bluetooth device name')
             parser.parse_known_args(argv, self)
 
         logger = logging.getLogger(__name__ + '.' + self.address)
@@ -131,6 +157,9 @@ class Brain(object):
             logger.setLevel(logging.DEBUG)
         self.debug = logger.debug
         self.debug('starting...')
+
+        if self.address and self.name:
+            raise Exception('Only one of name/address can be specified')
 
     def __call__(self, command, *args):
         """Send a command to the connected double brain block over bluetooth.
@@ -165,9 +194,13 @@ class Brain(object):
             if not self.address:
                 self.debug('scanning...')
                 self._scan()
+            addr, sep, port = self.address.partition(',')
+            if not port:
+                port = '1'
+            port = int(port)
             self.debug('connecting...')
-            self.sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-            self.sock.connect((self.address, 1))
+            self.sock = _socket()
+            self.sock.connect((addr, port))
             self.connected = True
             self._reset()
             return self
@@ -192,13 +225,13 @@ class Brain(object):
                 pass
 
     def _scan(self):
-        """Find the brain bluetooth device."""
-        for addr in bluetooth.discover_devices():
-            self.debug('address: %s', addr)
-            name = bluetooth.lookup_name(addr)
-            self.debug('name: %s', name)
-            if name.startswith('Moss'):
-                self.address = addr
+        """Find the address of the brain bluetooth device."""
+        for addr, port, name in _find_service():
+            if (self.name is None and name.startswith('Moss') or
+                self.name is not None and self.name == name):
+                self.address = "%s,%d" % (addr, port)
+                self.debug('address: %s', self.address)
+                self.debug('name: %s', name)
                 return
         raise Exception('No device found')
 
